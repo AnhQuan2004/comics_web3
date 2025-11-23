@@ -69,8 +69,9 @@ export const ComicsApp: React.FC = () => {
 
   // Load story segments from markdown file
   useEffect(() => {
-    if (selectedGenre !== "Sui Origin Story") {
-      // Only load story if genre is Sui Origin Story
+    // Load story if genre is "Sui Origin Story" or if selected story is tutorial.md
+    const shouldLoadStory = selectedGenre === "Sui Origin Story" || selectedStory === "tutorial.md";
+    if (!shouldLoadStory) {
       return;
     }
 
@@ -193,9 +194,10 @@ export const ComicsApp: React.FC = () => {
     const isFinalPage = pageNum === MAX_STORY_PAGES;
     const langName = LANGUAGES.find((language) => language.code === selectedLanguage)?.name || "English";
     const isSuiStory = selectedGenre === "Sui Origin Story";
+    const isTutorialStory = selectedStory === "tutorial.md";
 
-    // --- SUI STORY OVERRIDE ---
-    if (isSuiStory) {
+    // --- SUI STORY / TUTORIAL STORY OVERRIDE ---
+    if (isSuiStory || isTutorialStory) {
       const segmentIndex = pageNum - 1;
       const segmentText = suiStorySegments[segmentIndex] || "The story continues into the future...";
 

@@ -26,7 +26,7 @@ export const TestModeToggle: React.FC = () => {
       </div>
       {testMode && (
         <p className="text-xs mt-2 text-brand-dark/70">
-          Using test wallet (bypassing extension)
+          Using test wallet
         </p>
       )}
     </div>

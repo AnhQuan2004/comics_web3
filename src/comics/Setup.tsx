@@ -292,7 +292,7 @@ export const Setup: React.FC<SetupProps> = (props) => {
                         value={props.selectedStory}
                         onChange={(event) => props.onStoryChange(event.target.value)}
                         className="w-full font-comic text-lg p-1 border-2 border-black uppercase bg-white text-black cursor-pointer shadow-[3px_3px_0px_rgba(0,0,0,0.2)]"
-                        disabled={props.selectedGenre !== "Sui Origin Story"}
+                        disabled={props.selectedGenre !== "Sui Origin Story" && props.selectedStory !== "tutorial.md"}
                       >
                         {STORIES.map((story) => (
                           <option key={story.file} value={story.file} className="text-black">
@@ -300,9 +300,9 @@ export const Setup: React.FC<SetupProps> = (props) => {
                           </option>
                         ))}
                       </select>
-                      {props.selectedGenre !== "Sui Origin Story" && (
+                      {props.selectedGenre !== "Sui Origin Story" && props.selectedStory !== "tutorial.md" && (
                         <p className="text-xs text-gray-500 mt-1 italic">
-                          Only available for "Sui Origin Story" genre
+                          Only available for "Sui Origin Story" genre or "Tutorial" story
                         </p>
                       )}
                     </div>

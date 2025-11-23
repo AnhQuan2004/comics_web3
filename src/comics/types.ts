@@ -53,6 +53,7 @@ export const LANGUAGES = [
 export const STORIES = [
   { file: "sui-story.md", name: "Sui Origin Story" },
   { file: "walrus-story.md", name: "Walrus Story" },
+  { file: "tutorial.md", name: "Tutorial" },
 ];
 
 export interface ComicFace {
