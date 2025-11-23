@@ -12,6 +12,8 @@ interface PanelProps {
   onMintComic: () => void;
   isMintingComic: boolean;
   comicMinted: boolean;
+  onContinue: (continueReading: boolean) => void;
+  shouldContinue: boolean | null;
 }
 
 export const Panel: React.FC<PanelProps> = ({
@@ -24,6 +26,8 @@ export const Panel: React.FC<PanelProps> = ({
   onMintComic,
   isMintingComic,
   comicMinted,
+  onContinue,
+  shouldContinue,
 }) => {
   if (!face) return <div className="w-full h-full bg-gray-950" />;
   if (face.isLoading && !face.imageUrl) return <LoadingFX />;
@@ -63,6 +67,33 @@ export const Panel: React.FC<PanelProps> = ({
               {choice}
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Continue prompt at page 4 */}
+      {face.type === "story" && face.pageIndex === 4 && shouldContinue === null && face.imageUrl && !face.isLoading && (
+        <div className="absolute bottom-0 inset-x-0 p-6 pb-12 flex flex-col gap-3 items-center justify-end bg-gradient-to-t from-black/90 via-black/50 to-transparent z-20">
+          <p className="text-white font-comic text-2xl uppercase tracking-widest mb-2">Continue Reading?</p>
+          <div className="flex gap-4 w-full">
+            <button
+              onClick={(event) => {
+                event.stopPropagation();
+                onContinue(true);
+              }}
+              className="comic-btn flex-1 py-3 text-xl font-bold tracking-wider bg-green-500 text-white hover:bg-green-400"
+            >
+              CONTINUE
+            </button>
+            <button
+              onClick={(event) => {
+                event.stopPropagation();
+                onContinue(false);
+              }}
+              className="comic-btn flex-1 py-3 text-xl font-bold tracking-wider bg-red-500 text-white hover:bg-red-400"
+            >
+              STOP HERE
+            </button>
+          </div>
         </div>
       )}
 

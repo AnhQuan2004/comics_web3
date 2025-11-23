@@ -51,6 +51,7 @@ export const ComicsApp: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [heroId, setHeroId] = useState<string | null>(null);
   const [suiStorySegments, setSuiStorySegments] = useState<string[]>([]);
+  const [shouldContinue, setShouldContinue] = useState<boolean | null>(null);
 
   const { mintHero, mintComic } = useInfiniteHeroes();
 
@@ -1246,9 +1247,11 @@ OUTPUT STRICT JSON ONLY:
       setIsStarted(true);
       setShowSetup(false);
       setIsTransitioning(false);
+      setShouldContinue(null); // Reset continue state
       // Start with a small batch to get into the book quickly
       await generateBatch(1, INITIAL_PAGES);
-      generateBatch(3, BATCH_SIZE);
+      // Generate pages 3-4, then wait for user to decide if they want to continue
+      await generateBatch(3, 2); // Generate pages 3 and 4 only
     }, 1100);
   };
 
@@ -1260,6 +1263,18 @@ OUTPUT STRICT JSON ONLY:
     }
   };
 
+  const handleContinue = async (continueReading: boolean) => {
+    setShouldContinue(continueReading);
+    if (continueReading) {
+      // Continue generating from page 5
+      const maxPage = Math.max(...historyRef.current.map((face) => face.pageIndex || 0));
+      if (maxPage < TOTAL_PAGES) {
+        generateBatch(5, BATCH_SIZE);
+      }
+    }
+    // If false, stop generating - user can still read pages 1-4
+  };
+
   const resetApp = () => {
     setIsStarted(false);
     setShowSetup(true);
@@ -1269,6 +1284,7 @@ OUTPUT STRICT JSON ONLY:
     generatingPages.current.clear();
     setHero(null);
     setFriend(null);
+    setShouldContinue(null);
   };
 
   const downloadPDF = () => {
@@ -1419,6 +1435,8 @@ OUTPUT STRICT JSON ONLY:
           onMintComic={handleMintComic}
           isMintingComic={isMintingComic}
           comicMinted={comicMinted}
+          onContinue={handleContinue}
+          shouldContinue={shouldContinue}
         />
       </div>
     </div>

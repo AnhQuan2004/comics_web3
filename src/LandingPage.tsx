@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ConnectButton } from '@mysten/dapp-kit';
 import { useTestAccount } from './hooks/useTestWallet';
 
@@ -13,6 +13,8 @@ interface LandingPageProps {
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
     const scrollRef = useRef<HTMLDivElement>(null);
+    const audioRef = useRef<HTMLAudioElement>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
     const account = useTestAccount();
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -32,8 +34,80 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
         return () => observer.disconnect();
     }, []);
 
+    const toggleAudio = () => {
+        if (audioRef.current) {
+            if (isPlaying) {
+                audioRef.current.pause();
+            } else {
+                audioRef.current.play();
+            }
+            setIsPlaying(!isPlaying);
+        }
+    };
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        const handleEnded = () => setIsPlaying(false);
+        const handlePlay = () => setIsPlaying(true);
+        const handlePause = () => setIsPlaying(false);
+
+        audio.addEventListener('ended', handleEnded);
+        audio.addEventListener('play', handlePlay);
+        audio.addEventListener('pause', handlePause);
+
+        return () => {
+            audio.removeEventListener('ended', handleEnded);
+            audio.removeEventListener('play', handlePlay);
+            audio.removeEventListener('pause', handlePause);
+        };
+    }, []);
+
     return (
         <div className="min-h-screen bg-brand-bg text-brand-dark font-mono overflow-x-hidden selection:bg-neon-pink selection:text-white">
+            {/* Audio Player */}
+            <audio
+                ref={audioRef}
+                src="/2025-11-23 22-43-08.mp3"
+                preload="metadata"
+            />
+
+            {/* Audio Control Button - Fixed Position */}
+            <div className="fixed top-6 left-6 z-50 flex items-center gap-3">
+                <button
+                    onClick={toggleAudio}
+                    className="w-16 h-16 bg-neon-pink border-4 border-brand-dark shadow-hard hover:shadow-hard-lime hover:scale-110 transition-all duration-200 flex items-center justify-center group"
+                    aria-label={isPlaying ? "Pause audio" : "Play audio"}
+                >
+                    {isPlaying ? (
+                        <svg className="w-8 h-8 text-brand-dark" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                        </svg>
+                    ) : (
+                        <svg className="w-8 h-8 text-brand-dark ml-1" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                        </svg>
+                    )}
+                </button>
+                
+                {/* FigJam-style Annotation */}
+                <div className="flex items-center gap-2">
+                    {/* Arrow pointing from text to button (left direction) */}
+                    <svg 
+                        className="w-6 h-6 text-brand-dark" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="3"
+                    >
+                        <path d="M16 12H0M6 6l-6 6 6 6" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <div className="bg-white border-2 border-brand-dark shadow-hard px-3 py-1.5 font-bold text-sm">
+                        PLAY MUSIC
+                    </div>
+                </div>
+            </div>
 
             {/* --- HERO SECTION --- */}
             <section className="min-h-screen flex flex-col items-center justify-center relative border-b-8 border-brand-dark overflow-hidden">
@@ -42,8 +116,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
                     style={{ backgroundImage: 'radial-gradient(#111 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
 
                 {/* Floating Elements */}
-                <div className="absolute top-20 left-10 w-32 h-32 bg-neon-lime border-4 border-brand-dark shadow-hard animate-float-1 hidden md:block rotate-12"></div>
-                <div className="absolute bottom-40 right-20 w-48 h-48 bg-neon-purple border-4 border-brand-dark shadow-hard-pink animate-float-2 hidden md:block -rotate-6 rounded-full"></div>
+                <div className="absolute top-20 left-10 w-32 h-32 border-4 border-brand-dark shadow-hard animate-float-1 hidden md:block rotate-12 overflow-hidden bg-gray-800">
+                    <img 
+                        src="/comics-7.jpeg" 
+                        alt="Comic 7"
+                        className="w-full h-full object-cover"
+                    />
+                </div>
+                <div className="absolute bottom-40 right-20 w-48 h-48 border-4 border-brand-dark shadow-hard-pink animate-float-2 hidden md:block -rotate-6 rounded-full overflow-hidden bg-gray-800">
+                    <img 
+                        src="/comics-2.jpeg" 
+                        alt="Comic 2"
+                        className="w-full h-full object-cover"
+                    />
+                </div>
                 <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-brutal-red border-4 border-brand-dark shadow-hard-sm animate-bounce-fast hidden lg:block rounded-none rotate-45"></div>
 
                 {/* Main Title */}
@@ -155,8 +241,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
                             <div className="flex flex-col md:flex-row items-start gap-6">
                                 <div className="w-20 h-20 bg-white border-4 border-brand-dark flex items-center justify-center text-4xl font-bold flex-shrink-0 group-hover:-rotate-12 transition-transform">2</div>
                                 <div className="flex-1">
-                                    <h3 className="text-4xl md:text-5xl font-display mb-4 text-white">NARRATIVE SELECTION</h3>
-                                    <div className="space-y-4 text-lg md:text-xl text-white">
+                                    <h3 className="text-4xl md:text-5xl font-display mb-4 text-brand-dark">NARRATIVE SELECTION</h3>
+                                    <div className="space-y-4 text-lg md:text-xl text-brand-dark">
                                         <div className="flex items-start gap-3">
                                             <span className="font-bold">GENRE:</span>
                                             <span>Users select a narrative archetype (e.g., Cyberpunk Noir, High Fantasy, Space Opera).</span>
@@ -316,7 +402,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
             <footer className="bg-brand-dark text-white py-12 px-8 border-t-8 border-neon-blue font-mono text-sm">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
                     <div className="text-center md:text-left">
-                        <h4 className="text-2xl font-display text-neon-pink mb-2">INFINITE HEROES</h4>
+                        <div className="flex items-center gap-3 mb-2">
+                            <img 
+                                src="/logo.png" 
+                                alt="Infinite Heroes Logo"
+                                className="h-12 w-12 rounded-full object-cover"
+                            />
+                            <h4 className="text-2xl font-display text-neon-pink">INFINITE HEROES</h4>
+                        </div>
                         <p className="text-gray-400 mb-2">AI-Agent Driven Comic Publishing Protocol on Sui</p>
                         <p className="text-gray-400">© 2025. All rights reserved.</p>
                     </div>

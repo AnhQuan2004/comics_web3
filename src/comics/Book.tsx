@@ -15,6 +15,8 @@ interface BookProps {
   onMintComic: () => void;
   isMintingComic: boolean;
   comicMinted: boolean;
+  onContinue: (continueReading: boolean) => void;
+  shouldContinue: boolean | null;
 }
 
 export const Book: React.FC<BookProps> = ({
@@ -30,6 +32,8 @@ export const Book: React.FC<BookProps> = ({
   onMintComic,
   isMintingComic,
   comicMinted,
+  onContinue,
+  shouldContinue,
 }) => {
   const sheetsToRender: { front?: ComicFace; back?: ComicFace }[] = [];
 
@@ -80,6 +84,8 @@ export const Book: React.FC<BookProps> = ({
               onMintComic={onMintComic}
               isMintingComic={isMintingComic}
               comicMinted={comicMinted}
+              onContinue={onContinue}
+              shouldContinue={shouldContinue}
             />
           </div>
           <div className="back">
@@ -93,6 +99,8 @@ export const Book: React.FC<BookProps> = ({
               onMintComic={onMintComic}
               isMintingComic={isMintingComic}
               comicMinted={comicMinted}
+              onContinue={onContinue}
+              shouldContinue={shouldContinue}
             />
           </div>
         </div>
