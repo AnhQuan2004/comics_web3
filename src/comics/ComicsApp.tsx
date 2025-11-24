@@ -1178,6 +1178,7 @@ OUTPUT STRICT JSON ONLY:
   };
 
   const generateBatch = async (startPage: number, count: number) => {
+    console.log(`generateBatch called with startPage: ${startPage}, count: ${count}`);
     const pagesToGen: number[] = [];
     for (let index = 0; index < count; index++) {
       const page = startPage + index;
@@ -1186,7 +1187,12 @@ OUTPUT STRICT JSON ONLY:
       }
     }
 
-    if (pagesToGen.length === 0) return;
+    console.log("generateBatch - pagesToGen:", pagesToGen);
+
+    if (pagesToGen.length === 0) {
+      console.warn("generateBatch - No pages to generate.");
+      return;
+    }
     pagesToGen.forEach((page) => generatingPages.current.add(page));
 
     const newFaces: ComicFace[] = [];
@@ -1194,6 +1200,8 @@ OUTPUT STRICT JSON ONLY:
       const type = pageNum === BACK_COVER_PAGE ? "back_cover" : "story";
       newFaces.push({ id: `page-${pageNum}`, type, choices: [], isLoading: true, pageIndex: pageNum });
     });
+
+    console.log("generateBatch - Adding new faces:", newFaces);
 
     setComicFaces((prev) => {
       const existing = new Set(prev.map((face) => face.id));
@@ -1272,17 +1280,28 @@ OUTPUT STRICT JSON ONLY:
   };
 
   const handleContinue = async (continueReading: boolean) => {
+    console.log("handleContinue called:", continueReading);
     setShouldContinue(continueReading);
     if (continueReading) {
       // Continue generating from the next page
       const maxPage = Math.max(...historyRef.current.map((face) => face.pageIndex || 0));
+      console.log("handleContinue - maxPage:", maxPage, "TOTAL_PAGES:", TOTAL_PAGES);
+
       if (maxPage < TOTAL_PAGES) {
         // Prevent double generation if already generating
-        if (generatingPages.current.size > 0) return;
+        console.log("handleContinue - generatingPages size:", generatingPages.current.size);
+        if (generatingPages.current.size > 0) {
+          console.warn("handleContinue - Already generating, skipping.");
+          return;
+        }
 
+        console.log("handleContinue - Calling generateBatch for:", maxPage + 1);
         generateBatch(maxPage + 1, BATCH_SIZE);
         // Auto-flip to next page to show loading state
-        setTimeout(() => setCurrentSheetIndex((prev) => prev + 1), 500);
+        setTimeout(() => {
+          console.log("handleContinue - Flipping to next sheet");
+          setCurrentSheetIndex((prev) => prev + 1);
+        }, 500);
       }
     } else {
       // Generate Back Cover immediately so user can Mint
