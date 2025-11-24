@@ -1266,8 +1266,6 @@ OUTPUT STRICT JSON ONLY:
       setShouldContinue(null); // Reset continue state
       // Start with a small batch to get into the book quickly
       await generateBatch(1, INITIAL_PAGES);
-      // Generate pages 3-4, then wait for user to decide if they want to continue
-      await generateBatch(3, 2); // Generate pages 3 and 4 only
     }, 1100);
   };
 
@@ -1288,10 +1286,10 @@ OUTPUT STRICT JSON ONLY:
       console.log("handleContinue - maxPage:", maxPage, "TOTAL_PAGES:", TOTAL_PAGES);
 
       if (maxPage < TOTAL_PAGES) {
-        // Prevent double generation if already generating
+        // Prevent double generation if we are already generating the next batch
         console.log("handleContinue - generatingPages size:", generatingPages.current.size);
-        if (generatingPages.current.size > 0) {
-          console.warn("handleContinue - Already generating, skipping.");
+        if (generatingPages.current.has(maxPage + 1)) {
+          console.warn("handleContinue - Already generating next page, skipping.");
           return;
         }
 
