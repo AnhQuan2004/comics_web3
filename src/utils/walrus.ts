@@ -53,7 +53,7 @@ export const uploadToWalrus = async (file: Uint8Array): Promise<{ blobId: string
     const { blobId } = await walrusClient.writeBlob({
         blob: file,
         deletable: false,
-        epochs: 1, // Keep it short for testing
+        epochs: 10, // Reduced to 10 to avoid MoveAbort (reserve_space failed with 100)
         signer: signer,
     });
 
@@ -121,6 +121,9 @@ export const fetchFromWalrus = async (blobId: string | bigint) => {
 
     const url = `https://aggregator.walrus-testnet.walrus.space/v1/blobs/${finalId}`;
     const response = await fetch(url);
-    if (!response.ok) throw new Error(`Failed to fetch blob: ${response.statusText}`);
+    if (!response.ok) {
+        console.error(`Walrus fetch failed: ${response.status} ${response.statusText} for URL: ${url}`);
+        throw new Error(`Failed to fetch blob: ${response.statusText}`);
+    }
     return response.json();
 };

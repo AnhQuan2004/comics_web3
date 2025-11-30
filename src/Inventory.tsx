@@ -16,7 +16,7 @@ interface ComicMetadata {
 }
 
 export const Inventory: React.FC<InventoryProps> = ({ onBack }) => {
-  const { fetchUserComics } = useInfiniteHeroes();
+  const { fetchUserComics, discardComic } = useInfiniteHeroes();
   const [comics, setComics] = useState<ComicMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [readingComic, setReadingComic] = useState<{ id: string; name: string; pages: string[] } | null>(null);
@@ -47,9 +47,9 @@ export const Inventory: React.FC<InventoryProps> = ({ onBack }) => {
         name: comic.title || `Issue #${comic.issueNumber}`,
         pages
       });
-    } catch (e) {
-      console.error(e);
-      alert("Failed to load comic content from Walrus.");
+    } catch (e: any) {
+      console.error("Error loading comic content:", e);
+      alert(`Failed to load comic content from Walrus. Details: ${e.message || e}`);
     } finally {
       setFetchingContent(false);
     }
@@ -154,6 +154,29 @@ export const Inventory: React.FC<InventoryProps> = ({ onBack }) => {
                           className="flex-1 comic-btn bg-yellow-400 text-black px-4 py-2 text-sm font-bold hover:bg-yellow-300"
                         >
                           DOWNLOAD
+                        </button>
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (window.confirm("Are you sure you want to DISCARD this comic? This action cannot be undone.")) {
+                              try {
+                                setLoading(true);
+                                await discardComic(comic.id);
+                                alert("Comic discarded successfully!");
+                                // Refresh list
+                                const data = await fetchUserComics();
+                                setComics(data);
+                              } catch (err: any) {
+                                console.error(err);
+                                alert("Failed to discard comic: " + err.message);
+                              } finally {
+                                setLoading(false);
+                              }
+                            }
+                          }}
+                          className="flex-1 comic-btn bg-red-600 text-white px-4 py-2 text-sm font-bold hover:bg-red-500"
+                        >
+                          DISCARD
                         </button>
                       </div>
                     </div>

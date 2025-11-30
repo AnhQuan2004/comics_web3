@@ -310,5 +310,75 @@ export const useInfiniteHeroes = () => {
         }
     };
 
-    return { mintHero, mintComic, mintComicProtocol, fetchUserComics };
+    const discardComic = async (comicId: string) => {
+        if (!account) throw new Error("Wallet not connected");
+
+        const tx = new Transaction() as any;
+
+        // We need to find the Kiosk Owner Cap for the Kiosk that holds this comic.
+        // This is a bit tricky because we only have the comic ID.
+        // However, for this "hacky" discard, we might need to assume we can find it or just transfer the comic object itself if it wasn't in a kiosk?
+        // Wait, the comics ARE in a Kiosk. We can't just transfer the comic object out of the Kiosk without the Kiosk Owner Cap and following Kiosk rules (taking it out).
+        // Taking an item out of a Kiosk usually requires a TransferPolicy and potentially payment if locked.
+        // BUT, if we own the Kiosk Owner Cap, we can transfer the *Kiosk Owner Cap* to 0x0? No, that would discard ALL items in that Kiosk.
+        // Our minting logic creates a NEW Kiosk for EACH comic (see mintComic: `kiosk::new`).
+        // So, yes, we can just transfer the Kiosk Owner Cap for that specific comic to 0x0.
+
+        // 1. Find the Kiosk Owner Cap that owns the Kiosk containing this comic.
+        // We need to fetch the Kiosk ID for this comic.
+        // In `fetchUserComics`, we iterate over Kiosks.
+        // Let's optimize: We can't easily map ComicID -> KioskCapID without indexing.
+        // For now, let's iterate again to find the right cap.
+
+        // Fetch all owned Kiosk Caps
+        const { data: caps } = await client.getOwnedObjects({
+            owner: account.address,
+            filter: { StructType: `0x2::kiosk::KioskOwnerCap` },
+            options: { showContent: true }
+        });
+
+        let targetCapId: string | null = null;
+
+        // This is inefficient but functional for a hackathon/demo scale
+        for (const cap of caps) {
+            const content = cap.data?.content as any;
+            const kioskId = content?.fields?.for;
+            const capId = cap.data?.objectId;
+
+            if (!kioskId) continue;
+
+            // Check if this Kiosk contains the comic
+            const { data: fields } = await client.getDynamicFields({
+                parentId: kioskId,
+            });
+
+            // The key is 0x2::kiosk::Item { id: ID }
+            // So field.name.value is { id: "0x..." }
+            const hasComic = fields.some(field =>
+                field.name.type === "0x2::kiosk::Item" &&
+                (field.name.value as any).id === comicId
+            );
+
+            if (hasComic) {
+                targetCapId = capId || null;
+                break;
+            }
+        }
+
+        if (!targetCapId) {
+            throw new Error("Could not find Kiosk Owner Cap for this comic. It might not be in a Kiosk you own.");
+        }
+
+        // 2. Transfer the Kiosk Owner Cap to 0x0 (Burn Address)
+        // This effectively makes the Kiosk and its contents inaccessible to the user.
+        tx.transferObjects([tx.object(targetCapId)], tx.pure.address("0x0000000000000000000000000000000000000000000000000000000000000000"));
+
+        const response = await signAndExecute({
+            transaction: tx,
+        });
+
+        return response;
+    };
+
+    return { mintHero, mintComic, mintComicProtocol, fetchUserComics, discardComic };
 };
